@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub Diário</title>
+    
+    <!-- Tailwind CSS para um design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter para uma leitura limpa -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Estilos customizados e variáveis de tema */
+        :root {
+            --accent-color: #3498db;
+            --font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            -webkit-tap-highlight-color: transparent; /* Remove o flash azul em toques no mobile */
+        }
+        
+        /* Tema Escuro (Padrão) */
+        .dark {
+            --bg-primary: #111827; /* gray-900 */
+            --bg-secondary: #1f2937; /* gray-800 */
+            --bg-tertiary: #374151; /* gray-700 */
+            --text-primary: #f9fafb; /* gray-50 */
+            --text-secondary: #d1d5db; /* gray-300 */
+            --border-color: #4b5563; /* gray-600 */
+        }
+        
+        /* Tema Claro */
+        .light {
+            --bg-primary: #f9fafb; /* gray-50 */
+            --bg-secondary: #ffffff; /* white */
+            --bg-tertiary: #e5e7eb; /* gray-200 */
+            --text-primary: #111827; /* gray-900 */
+            --text-secondary: #4b5563; /* gray-600 */
+            --border-color: #d1d5db; /* gray-300 */
+        }
+
+        /* Animações */
+        .view {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .list-item-enter {
+            animation: slideInUp 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Classes utilitárias com variáveis de tema */
+        .bg-primary { background-color: var(--bg-primary); }
+        .bg-secondary { background-color: var(--bg-secondary); }
+        .bg-tertiary { background-color: var(--bg-tertiary); }
+        .text-primary { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .border-custom { border-color: var(--border-color); }
+        .accent-bg { background-color: var(--accent-color); }
+        .accent-text { color: var(--accent-color); }
+        .accent-border { border-color: var(--accent-color); }
+
+        /* Estilo para a scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+        
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-primary text-primary transition-colors duration-300">
+
+    <main class="max-w-4xl mx-auto p-4 pb-28">
+
+        <!-- Notificação Flutuante -->
+        <div id="notification" class="fixed top-5 left-1/2 -translate-x-1/2 bg-secondary text-primary px-6 py-3 rounded-full shadow-lg opacity-0 transition-opacity duration-300 z-50">
+            Mensagem da notificação
+        </div>
+
+        <!-- Seção de Cabeçalho e Boas-Vindas -->
+        <header class="text-center my-8">
+            <h1 class="text-4xl font-bold">Hub Diário</h1>
+            <p id="welcome-message" class="text-secondary mt-2 text-lg">Organize seu dia com facilidade.</p>
+        </header>
+
+        <!-- Container das Views (Telas) -->
+        <div id="views-container">
+            <!-- VIEW DE TAREFAS -->
+            <section id="tasks-view" class="view">
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center"><i class="fas fa-list-check mr-3 accent-text"></i>Lista de Tarefas</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input id="task-input" type="text" placeholder="Adicionar ou dividir tarefa com IA..." class="w-full bg-tertiary text-primary p-3 rounded-lg border-2 border-transparent focus:border-custom focus:outline-none transition-all">
+                        <button id="add-task-button" class="accent-bg text-white px-5 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity" title="Adicionar Tarefa"><i class="fas fa-plus"></i></button>
+                        <button id="gemini-task-button" class="bg-purple-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors" title="Dividir Tarefa com IA">✨</button>
+                    </div>
+                    <ul id="task-list" class="space-y-3"></ul>
+                    <div class="mt-6 pt-4 border-t border-custom flex justify-between items-center text-secondary">
+                        <div class="flex gap-4">
+                            <span>Total: <b id="total-tasks" class="text-primary">0</b></span>
+                            <span>Pendentes: <b id="pending-tasks" class="text-primary">0</b></span>
+                            <span>Concluídas: <b id="completed-tasks" class="text-primary">0</b></span>
+                        </div>
+                        <button id="clear-tasks" class="text-sm hover:accent-text transition-colors">Limpar tudo</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW DE COMPRAS -->
+            <section id="shopping-view" class="view hidden">
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg">
+                     <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold flex items-center"><i class="fas fa-cart-shopping mr-3 accent-text"></i>Lista de Compras</h2>
+                        <button id="gemini-recipe-button" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2">✨ Criar Receita</button>
+                    </div>
+                    <div class="flex gap-2 mb-4">
+                        <input id="item-input" type="text" placeholder="Adicionar item..." class="w-full bg-tertiary text-primary p-3 rounded-lg border-2 border-transparent focus:border-custom focus:outline-none transition-all">
+                        <button id="add-item-button" class="accent-bg text-white px-5 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <ul id="shopping-list" class="space-y-3"></ul>
+                    <div class="mt-6 pt-4 border-t border-custom flex justify-between items-center text-secondary">
+                        <span class="text-lg">Total Gasto: <b id="shopping-total" class="text-primary">R$ 0,00</b></span>
+                        <button id="clear-shopping" class="text-sm hover:accent-text transition-colors">Limpar tudo</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW DE NOTAS -->
+            <section id="notes-view" class="view hidden">
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center"><i class="fas fa-note-sticky mr-3 accent-text"></i>Bloco de Notas</h2>
+                    <div class="flex flex-col gap-2 mb-4">
+                        <textarea id="note-input" placeholder="Escreva sua nota aqui..." rows="4" class="w-full bg-tertiary text-primary p-3 rounded-lg border-2 border-transparent focus:border-custom focus:outline-none transition-all resize-none"></textarea>
+                        <button id="add-note-button" class="accent-bg text-white px-5 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity w-full">Adicionar Nota</button>
+                    </div>
+                    <div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </section>
+
+            <!-- VIEW DE CONFIGURAÇÕES -->
+            <section id="settings-view" class="view hidden">
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fas fa-gear mr-3 accent-text"></i>Configurações</h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3">Tema do Aplicativo</h3>
+                        <div class="flex gap-4">
+                            <button data-theme="dark" class="theme-btn flex-1 p-4 rounded-lg bg-gray-800 text-white border-2 border-transparent">Escuro</button>
+                            <button data-theme="light" class="theme-btn flex-1 p-4 rounded-lg bg-gray-200 text-black border-2 border-transparent">Claro</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">Cor de Destaque</h3>
+                        <div id="accent-selector" class="flex gap-3 flex-wrap">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal para Receita Gerada por IA -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-secondary rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <header class="p-4 border-b border-custom flex justify-between items-center">
+                <h3 class="text-xl font-bold">✨ Receita Gerada por IA</h3>
+                <button id="close-modal-btn" class="text-2xl hover:accent-text">&times;</button>
+            </header>
+            <div id="modal-content" class="p-6 overflow-y-auto">
+                <!-- Conteúdo da receita vai aqui -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Barra de Navegação Inferior Fixa -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-secondary border-t border-custom p-3 flex justify-around max-w-4xl mx-auto rounded-t-2xl">
+        <button data-view="tasks-view" class="nav-btn flex flex-col items-center w-20 p-2 rounded-lg transition-all duration-200">
+            <i class="fas fa-list-check text-xl"></i>
+            <span class="text-xs mt-1">Tarefas</span>
+        </button>
+        <button data-view="shopping-view" class="nav-btn flex flex-col items-center w-20 p-2 rounded-lg transition-all duration-200">
+            <i class="fas fa-cart-shopping text-xl"></i>
+            <span class="text-xs mt-1">Compras</span>
+        </button>
+        <button data-view="notes-view" class="nav-btn flex flex-col items-center w-20 p-2 rounded-lg transition-all duration-200">
+            <i class="fas fa-note-sticky text-xl"></i>
+            <span class="text-xs mt-1">Notas</span>
+        </button>
+        <button data-view="settings-view" class="nav-btn flex flex-col items-center w-20 p-2 rounded-lg transition-all duration-200">
+            <i class="fas fa-gear text-xl"></i>
+            <span class="text-xs mt-1">Ajustes</span>
+        </button>
+    </nav>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // ------------------ Seletores do DOM ------------------
+        const views = document.querySelectorAll('.view');
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const notification = document.getElementById('notification');
+
+        // Tarefas
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-button');
+        const geminiTaskBtn = document.getElementById('gemini-task-button');
+        const taskList = document.getElementById('task-list');
+        const totalTasksEl = document.getElementById('total-tasks');
+        const pendingTasksEl = document.getElementById('pending-tasks');
+        const completedTasksEl = document.getElementById('completed-tasks');
+        const clearTasksBtn = document.getElementById('clear-tasks');
+
+        // Compras
+        const itemInput = document.getElementById('item-input');
+        const addItemBtn = document.getElementById('add-item-button');
+        const geminiRecipeBtn = document.getElementById('gemini-recipe-button');
+        const shoppingList = document.getElementById('shopping-list');
+        const shoppingTotalEl = document.getElementById('shopping-total');
+        const clearShoppingBtn = document.getElementById('clear-shopping');
+        
+        // Modal de Receita
+        const recipeModal = document.getElementById('recipe-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalContent = document.getElementById('modal-content');
+
+        // Notas
+        const noteInput = document.getElementById('note-input');
+        const addNoteBtn = document.getElementById('add-note-button');
+        const notesList = document.getElementById('notes-list');
+
+        // Configurações
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const accentSelector = document.getElementById('accent-selector');
+
+        // ------------------ Estado e LocalStorage ------------------
+        let state = {
+            tasks: JSON.parse(localStorage.getItem("tasks")) || [],
+            shoppingItems: JSON.parse(localStorage.getItem("shoppingItems")) || [],
+            notes: JSON.parse(localStorage.getItem("notes")) || [],
+            theme: localStorage.getItem("theme") || "dark",
+            accent: localStorage.getItem("accent") || "#3498db",
+            activeView: "tasks-view"
+        };
+        
+        const accentColors = ['#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#f1c40f', '#1abc9c'];
+
+        // ------------------ Funções Utilitárias ------------------
+        const saveData = () => {
+            localStorage.setItem("tasks", JSON.stringify(state.tasks));
+            localStorage.setItem("shoppingItems", JSON.stringify(state.shoppingItems));
+            localStorage.setItem("notes", JSON.stringify(state.notes));
+            localStorage.setItem("theme", state.theme);
+            localStorage.setItem("accent", state.accent);
+        };
+
+        const showNotification = (msg) => {
+            notification.textContent = msg;
+            notification.style.opacity = 1;
+            setTimeout(() => notification.style.opacity = 0, 2000);
+        };
+
+        const handleInputError = (inputElement) => {
+            inputElement.classList.add('border-red-500');
+            setTimeout(() => inputElement.classList.remove('border-red-500'), 1000);
+        };
+
+        // ------------------ Gemini API Integration ------------------
+        const apiKey = ""; // Canvas will provide the key runtime.
+
+        async function callGeminiAPI(prompt, buttonToDisable = null) {
+            let originalButtonContent;
+            if (buttonToDisable) {
+                originalButtonContent = buttonToDisable.innerHTML;
+                buttonToDisable.disabled = true;
+                buttonToDisable.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(`Erro na API: ${errorData.error.message}`);
+                }
+
+                const result = await response.json();
+                return result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                showNotification("Erro ao conectar com a IA. Tente novamente.");
+                return ''; // Return empty on error
+            } finally {
+                if (buttonToDisable) {
+                    buttonToDisable.disabled = false;
+                    buttonToDisable.innerHTML = originalButtonContent;
+                }
+            }
+        }
+        
+        // ------------------ Funções da IA ------------------
+        const breakDownTask = async () => {
+            const text = taskInput.value.trim();
+            if (!text) {
+                handleInputError(taskInput);
+                showNotification("Digite uma tarefa para a IA dividir.");
+                return;
+            }
+
+            const prompt = `Quebre a seguinte tarefa complexa em uma lista de subtarefas simples e acionáveis, em português. Retorne apenas a lista, com cada subtarefa em uma nova linha, sem números, marcadores ou texto introdutório. Apenas as tarefas, uma por linha.\n\nTarefa: "${text}"`;
+            
+            const result = await callGeminiAPI(prompt, geminiTaskBtn);
+
+            if (result) {
+                const subtasks = result.split('\n').filter(subtask => subtask.trim() !== '');
+                if (subtasks.length > 0) {
+                    subtasks.forEach(subtaskText => {
+                        state.tasks.unshift({ text: subtaskText.trim(), completed: false });
+                    });
+                    taskInput.value = "";
+                    renderTasks();
+                    showNotification(`${subtasks.length} subtarefas adicionadas!`);
+                } else {
+                    showNotification("Não foi possível dividir a tarefa.");
+                }
+            }
+        };
+
+        const showModal = (content) => {
+            modalContent.innerHTML = content;
+            recipeModal.classList.remove('hidden');
+        }
+
+        const hideModal = () => {
+            recipeModal.classList.add('hidden');
+        }
+
+        const generateRecipe = async () => {
+            const ingredients = state.shoppingItems
+                .filter(item => !item.bought)
+                .map(item => item.name);
+
+            if (ingredients.length < 2) {
+                showNotification("Adicione pelo menos 2 ingredientes!");
+                return;
+            }
+
+            const loadingHTML = `
+                <div class="text-center animate-pulse">
+                    <i class="fas fa-utensils text-4xl accent-text mb-4"></i>
+                    <p class="text-secondary text-lg">Preparando uma receita deliciosa...</p>
+                </div>`;
+            showModal(loadingHTML);
+
+            const prompt = `Crie uma receita simples e deliciosa em português usando os seguintes ingredientes: ${ingredients.join(', ')}. Você pode adicionar ingredientes comuns (sal, pimenta, óleo, etc.). Formate a resposta com um título criativo, uma lista de ingredientes e um passo-a-passo claro para o modo de preparo. Use markdown simples para formatação (ex: **Título**, *Ingredientes*, *Modo de Preparo*).`;
+
+            const result = await callGeminiAPI(prompt);
+
+            if (result) {
+                const formattedResult = result
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-xl accent-text block mb-2">$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<h4 class="text-lg font-semibold mt-4 mb-2 text-primary">$1</h4>')
+                    .replace(/\n/g, '<br>');
+                showModal(`<div class="prose text-secondary">${formattedResult}</div>`);
+            } else {
+                hideModal();
+                showNotification("Não foi possível gerar a receita.");
+            }
+        };
+
+        // ------------------ Navegação ------------------
+        const navigateTo = (viewId) => {
+            state.activeView = viewId;
+            views.forEach(view => view.classList.toggle('hidden', view.id !== viewId));
+            updateNavButtons();
+        };
+
+        const updateNavButtons = () => {
+            navButtons.forEach(btn => {
+                const isSelected = btn.dataset.view === state.activeView;
+                btn.classList.toggle('accent-bg', isSelected);
+                btn.classList.toggle('text-white', isSelected);
+                btn.classList.toggle('bg-tertiary', !isSelected);
+            });
+        };
+
+        // ------------------ Módulo de Tarefas ------------------
+        const renderTasks = () => {
+            taskList.innerHTML = "";
+            state.tasks.forEach((task, index) => {
+                const li = document.createElement("li");
+                li.className = `task-item list-item-enter bg-tertiary p-3 rounded-lg flex justify-between items-center transition-all ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <span class="flex-1 mr-4 cursor-pointer" data-action="toggle" data-index="${index}">${task.text}</span>
+                    <div class="flex gap-2">
+                        <button data-action="toggle" data-index="${index}" class="h-10 w-10 rounded-md ${task.completed ? 'accent-bg text-white' : 'bg-primary'} hover:opacity-80 transition-opacity"><i class="fas fa-check"></i></button>
+                        <button data-action="delete" data-index="${index}" class="h-10 w-10 rounded-md bg-primary text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                taskList.appendChild(li);
+            });
+            updateTaskStats();
+            saveData();
+        };
+        
+        const updateTaskStats = () => {
+            const total = state.tasks.length;
+            const completed = state.tasks.filter(t => t.completed).length;
+            totalTasksEl.textContent = total;
+            pendingTasksEl.textContent = total - completed;
+            completedTasksEl.textContent = completed;
+        };
+
+        const addTask = () => {
+            const text = taskInput.value.trim();
+            if (!text) {
+                handleInputError(taskInput);
+                return;
+            }
+            state.tasks.unshift({ text, completed: false });
+            taskInput.value = "";
+            renderTasks();
+            showNotification("Tarefa adicionada!");
+        };
+
+        // ------------------ Módulo de Compras ------------------
+        const renderShopping = () => {
+            shoppingList.innerHTML = "";
+            let total = 0;
+            state.shoppingItems.forEach((item, index) => {
+                const li = document.createElement("li");
+                li.className = `shopping-item list-item-enter bg-tertiary p-3 rounded-lg flex items-center gap-3 transition-all ${item.bought ? 'opacity-50' : ''}`;
+                li.innerHTML = `
+                    <input type="checkbox" data-action="toggle" data-index="${index}" class="form-checkbox h-6 w-6 rounded accent-bg" ${item.bought ? "checked" : ""}>
+                    <span class="flex-1 ${item.bought ? 'line-through' : ''}">${item.name}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-secondary">R$</span>
+                      <input type="number" value="${item.price || ''}" data-action="price" data-index="${index}" placeholder="0.00" class="price-input bg-primary w-24 p-1 rounded text-right">
+                    </div>
+                    <button data-action="delete" data-index="${index}" class="h-10 w-10 rounded-md bg-primary text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>`;
+                shoppingList.appendChild(li);
+                if (item.bought) total += parseFloat(item.price || 0);
+            });
+            shoppingTotalEl.textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+            saveData();
+        };
+
+        const addItem = () => {
+            const name = itemInput.value.trim();
+            if (!name) {
+                handleInputError(itemInput);
+                return;
+            }
+            state.shoppingItems.unshift({ name, bought: false, price: 0 });
+            itemInput.value = "";
+            renderShopping();
+            showNotification("Item adicionado!");
+        };
+
+        // ------------------ Módulo de Notas ------------------
+        const renderNotes = () => {
+            notesList.innerHTML = "";
+            state.notes.forEach((note, index) => {
+                const noteCard = document.createElement("div");
+                noteCard.className = "note-item list-item-enter bg-tertiary p-4 rounded-lg flex flex-col justify-between shadow";
+                noteCard.innerHTML = `
+                    <p class="text-secondary flex-1 mb-4 whitespace-pre-wrap">${note}</p>
+                    <button data-action="delete" data-index="${index}" class="self-end h-8 w-8 rounded-full bg-primary text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs"><i class="fas fa-trash"></i></button>`;
+                notesList.appendChild(noteCard);
+            });
+            saveData();
+        };
+        
+        const addNote = () => {
+            const text = noteInput.value.trim();
+            if (!text) {
+                handleInputError(noteInput);
+                return;
+            }
+            state.notes.unshift(text);
+            noteInput.value = "";
+            renderNotes();
+            showNotification("Nota adicionada!");
+        };
+
+        // ------------------ Módulo de Configurações ------------------
+        const applyTheme = () => {
+            document.body.className = `${state.theme} bg-primary text-primary transition-colors duration-300`;
+            document.documentElement.style.setProperty('--accent-color', state.accent);
+            updateThemeButtons();
+            updateAccentButtons();
+        };
+
+        const updateThemeButtons = () => {
+            themeButtons.forEach(btn => {
+                btn.classList.toggle('accent-border', btn.dataset.theme === state.theme);
+            });
+        };
+        
+        const renderAccentSelector = () => {
+            accentSelector.innerHTML = '';
+            accentColors.forEach(color => {
+                const colorBtn = document.createElement('button');
+                colorBtn.className = 'w-10 h-10 rounded-full border-2 border-transparent transition-all';
+                colorBtn.style.backgroundColor = color;
+                colorBtn.dataset.color = color;
+                accentSelector.appendChild(colorBtn);
+            });
+            updateAccentButtons();
+        };
+        
+        const updateAccentButtons = () => {
+            document.querySelectorAll('#accent-selector button').forEach(btn => {
+                btn.classList.toggle('border-custom', btn.dataset.color === state.accent);
+                btn.classList.toggle('scale-110', btn.dataset.color === state.accent);
+            });
+        };
+
+        // ------------------ Gerenciadores de Eventos (Event Listeners) ------------------
+        const setupListEventListeners = () => {
+            // ... (código existente sem alterações)
+            taskList.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+                const action = target.dataset.action;
+                const index = parseInt(target.dataset.index);
+
+                if (action === 'toggle') {
+                    state.tasks[index].completed = !state.tasks[index].completed;
+                    renderTasks();
+                } else if (action === 'delete') {
+                    state.tasks.splice(index, 1);
+                    renderTasks();
+                    showNotification("Tarefa removida!");
+                }
+            });
+
+            shoppingList.addEventListener('change', (e) => {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+                const action = target.dataset.action;
+                const index = parseInt(target.dataset.index);
+                
+                if (action === 'toggle') {
+                    state.shoppingItems[index].bought = !state.shoppingItems[index].bought;
+                } else if (action === 'price') {
+                    const price = parseFloat(target.value);
+                    if (!isNaN(price) && price >= 0) {
+                        state.shoppingItems[index].price = price;
+                    }
+                }
+                renderShopping();
+            });
+            shoppingList.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action="delete"]');
+                if(!target) return;
+                state.shoppingItems.splice(parseInt(target.dataset.index), 1);
+                renderShopping();
+                showNotification("Item removido!");
+            });
+
+            notesList.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action="delete"]');
+                if(!target) return;
+                state.notes.splice(parseInt(target.dataset.index), 1);
+                renderNotes();
+                showNotification("Nota removida!");
+            });
+        };
+
+        // Eventos de adição (botões e Enter)
+        addTaskBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => e.key === 'Enter' && addTask());
+        clearTasksBtn.addEventListener('click', () => {
+            state.tasks = [];
+            renderTasks();
+            showNotification("Todas as tarefas foram apagadas!");
+        });
+
+        addItemBtn.addEventListener('click', addItem);
+        itemInput.addEventListener('keypress', (e) => e.key === 'Enter' && addItem());
+        clearShoppingBtn.addEventListener('click', () => {
+            state.shoppingItems = [];
+            renderShopping();
+            showNotification("Lista de compras apagada!");
+        });
+
+        addNoteBtn.addEventListener('click', addNote);
+
+        // Eventos da IA
+        geminiTaskBtn.addEventListener('click', breakDownTask);
+        geminiRecipeBtn.addEventListener('click', generateRecipe);
+        closeModalBtn.addEventListener('click', hideModal);
+        recipeModal.addEventListener('click', (e) => {
+            if (e.target === recipeModal) hideModal();
+        });
+
+
+        // Navegação
+        navButtons.forEach(btn => btn.addEventListener('click', () => navigateTo(btn.dataset.view)));
+
+        // Configurações
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.theme = btn.dataset.theme;
+                applyTheme();
+                saveData();
+            });
+        });
+        
+        accentSelector.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-color]');
+            if(!target) return;
+            state.accent = target.dataset.color;
+            applyTheme();
+            saveData();
+        });
+
+
+        // ------------------ Inicialização ------------------
+        const init = () => {
+            navigateTo(state.activeView);
+            applyTheme();
+            renderAccentSelector();
+            renderTasks();
+            renderShopping();
+            renderNotes();
+            setupListEventListeners();
+        };
+
+        init();
+    });
+    </script>
+</body>
+</html>
+
