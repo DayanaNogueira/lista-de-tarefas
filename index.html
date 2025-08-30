@@ -195,6 +195,10 @@
                     <h1 class="text-3xl font-bold text-primary">Lista de Compras</h1>
                      <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
                 </header>
+                <div class="flex justify-between items-center bg-tertiary p-4 rounded-xl mb-4 shadow-custom">
+                    <span class="text-lg font-semibold text-primary">Total Gasto:</span>
+                    <span id="shopping-total" class="text-2xl font-bold accent-text">R$ 0.00</span>
+                </div>
                 <button id="generate-recipe-btn" class="w-full bg-tertiary text-primary font-semibold py-3 px-4 rounded-xl mb-4 flex items-center justify-center gap-2 transition-transform hover:scale-105">
                     <i class="fas fa-wand-magic-sparkles accent-text"></i> Criar Receita com IA
                 </button>
@@ -311,6 +315,7 @@
                 addItemBtn: document.getElementById('add-item-button'),
                 shoppingList: document.getElementById('shopping-list'),
                 generateRecipeBtn: document.getElementById('generate-recipe-btn'),
+                shoppingTotal: document.getElementById('shopping-total'),
 
                 // Notas
                 noteInput: document.getElementById('note-input'),
@@ -478,18 +483,27 @@
             // ------------------ Módulo de Compras ------------------
             const renderShopping = () => {
                 selectors.shoppingList.innerHTML = "";
+                let total = 0;
                 state.shoppingItems.forEach((item, index) => {
+                    if (item.bought) {
+                        total += parseFloat(item.price || 0);
+                    }
                     const li = document.createElement('li');
-                    li.className = 'bg-tertiary p-4 rounded-lg flex items-center justify-between';
+                    li.className = 'bg-tertiary p-3 rounded-lg flex items-center justify-between gap-2';
                     li.innerHTML = `
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 flex-grow">
                             <input type="checkbox" ${item.bought ? 'checked' : ''} data-index="${index}" class="form-checkbox h-5 w-5 rounded accent-bg border-color focus:ring-0">
                             <span class="text-primary ${item.bought ? 'line-through opacity-60' : ''}">${item.name}</span>
                         </div>
-                        <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                        <div class="flex items-center gap-2">
+                            <span class="text-secondary text-sm">R$</span>
+                            <input type="number" value="${item.price || 0}" data-index="${index}" class="price-input w-24 bg-primary text-primary rounded-md p-1 text-center border-2 border-color focus:border-[var(--accent-color)] focus:ring-0" placeholder="0.00" step="0.01">
+                            <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors px-2"><i class="fas fa-trash"></i></button>
+                        </div>
                     `;
                     selectors.shoppingList.appendChild(li);
                 });
+                selectors.shoppingTotal.textContent = `R$ ${total.toFixed(2)}`;
                 saveData();
             };
 
@@ -499,7 +513,7 @@
                     handleInputError(selectors.itemInput);
                     return;
                 }
-                state.shoppingItems.unshift({ name, bought: false });
+                state.shoppingItems.unshift({ name, bought: false, price: 0 });
                 selectors.itemInput.value = "";
                 renderShopping();
                 showNotification("Item adicionado!");
@@ -512,7 +526,7 @@
                     return;
                 }
                 showNotification("IA a criar uma receita... 🍳");
-                const prompt = `Crie uma receita simples usando os seguintes ingredientes: ${ingredients.join(', ')}. Formate a resposta em HTML, usando títulos <h3> para "Ingredientes" e "Modo de Preparo", e listas <ul> e <li> para os itens.`;
+                const prompt = `Crie uma receita simples e criativa usando apenas e exclusivamente os seguintes ingredientes: ${ingredients.join(', ')}. Assuma que itens básicos como água, sal, pimenta e óleo estão disponíveis. Não adicione nenhum outro ingrediente à receita. Formate a resposta em HTML, usando títulos <h3> para "Ingredientes" e "Modo de Preparo", e listas <ul> e <li> para os itens.`;
                 const result = await callGemini(prompt, selectors.generateRecipeBtn);
 
                 if(result){
@@ -527,8 +541,9 @@
             
             selectors.shoppingList.addEventListener('click', (e) => {
                 const target = e.target;
-                const index = target.dataset.index;
-                
+                const index = target.closest('li')?.querySelector('[data-index]').dataset.index;
+                if(index === undefined) return;
+
                 if (target.type === 'checkbox') {
                     state.shoppingItems[index].bought = !state.shoppingItems[index].bought;
                     renderShopping();
@@ -538,6 +553,19 @@
                     showNotification("Item removido!");
                 }
             });
+
+            selectors.shoppingList.addEventListener('change', (e) => {
+                const target = e.target;
+                if(target.classList.contains('price-input')) {
+                    const index = target.dataset.index;
+                    const newPrice = parseFloat(target.value);
+                    if (!isNaN(newPrice) && newPrice >= 0) {
+                        state.shoppingItems[index].price = newPrice;
+                        renderShopping(); 
+                    }
+                }
+            });
+
             selectors.closeRecipeModal.addEventListener('click', () => selectors.recipeModal.classList.add('hidden'));
 
 
