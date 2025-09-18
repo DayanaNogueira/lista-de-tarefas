@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +20,7 @@
             --gradient-color-4: #3b82f6;
         }
 
-        /* Estilos base e temas */
+        /* Estilos de Tema com variáveis CSS */
         .dark {
             --bg-primary: #111827; /* gray-900 */
             --bg-secondary: #1f2937; /* gray-800 */
@@ -43,17 +43,16 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary); /* Fundo de fallback */
+            background-color: var(--bg-primary);
         }
         
-        /* NOVO FUNDO DEGRADÊ ANIMADO E DINÂMICO */
         .animated-gradient-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0; /* Camada 0: O fundo */
+            z-index: 0; 
             background: linear-gradient(-45deg, 
                 var(--gradient-color-1), 
                 var(--gradient-color-2), 
@@ -72,7 +71,7 @@
         
         .content-wrapper {
             position: relative;
-            z-index: 1; /* Camada 1: O conteúdo por cima */
+            z-index: 1; 
             background-color: transparent;
         }
 
@@ -121,6 +120,26 @@
         .modal {
             animation: fadeIn 0.3s ease-out;
         }
+        .loading-spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .note-title {
+            font-weight: 600;
+            color: var(--accent-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
     </style>
 </head>
 <body class="transition-colors duration-300">
@@ -129,7 +148,7 @@
     <div class="animated-gradient-background" aria-hidden="true"></div>
 
     <!-- Wrapper do Conteúdo - Camada 1 -->
-    <div class="content-wrapper">
+    <div class="content-wrapper min-h-screen">
 
         <!-- Notificação Flutuante -->
         <div id="notification" class="fixed top-5 left-1/2 -translate-x-1/2 bg-secondary text-primary px-6 py-3 rounded-full shadow-lg opacity-0 transition-opacity duration-300 z-50"></div>
@@ -137,49 +156,59 @@
         <main class="max-w-4xl mx-auto p-4 pb-28">
 
             <!-- View da Home -->
-            <div id="home-view">
+            <div id="home-view" class="view-content">
                 <header class="text-center mb-8">
                     <h1 id="greeting" class="text-4xl font-bold text-primary">Bom dia!</h1>
                     <p class="text-secondary mt-2">Pronto para organizar o seu dia?</p>
                 </header>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Atalho Tarefas -->
-                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('tasks-view')">
+                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('tasks-view')" tabindex="0">
                         <i class="fas fa-list-check text-3xl accent-text mb-3"></i>
                         <h2 class="text-xl font-bold text-primary">Tarefas</h2>
                         <p class="text-secondary">Organize suas pendências</p>
                     </div>
                     <!-- Atalho Compras -->
-                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('shopping-view')">
+                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('shopping-view')" tabindex="0">
                         <i class="fas fa-cart-shopping text-3xl accent-text mb-3"></i>
                         <h2 class="text-xl font-bold text-primary">Compras</h2>
                         <p class="text-secondary">Crie sua lista de compras</p>
                     </div>
                     <!-- Atalho Notas -->
-                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('notes-view')">
+                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('notes-view')" tabindex="0">
                         <i class="fas fa-note-sticky text-3xl accent-text mb-3"></i>
                         <h2 class="text-xl font-bold text-primary">Notas Rápidas</h2>
                         <p class="text-secondary">Anote suas ideias</p>
                     </div>
                     <!-- Atalho Configurações -->
-                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('settings-view')">
+                    <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('settings-view')" tabindex="0">
                         <i class="fas fa-sliders text-3xl accent-text mb-3"></i>
                         <h2 class="text-xl font-bold text-primary">Configurações</h2>
                         <p class="text-secondary">Personalize seu hub</p>
+                    </div>
+                    
+                    <!-- Novo Atalho: Pensamento do Dia -->
+                    <div class="md:col-span-2 lg:col-span-3 bg-secondary p-6 rounded-2xl shadow-custom flex flex-col items-center justify-center text-center">
+                        <i class="fas fa-brain text-3xl accent-text mb-3"></i>
+                        <h2 class="text-xl font-bold text-primary mb-2">Pensamento do Dia</h2>
+                        <p id="daily-thought-text" class="text-secondary italic mb-4">Gerando seu pensamento...</p>
+                        <button id="generate-thought-btn" class="accent-bg text-white font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-wand-magic-sparkles"></i> Gerar Novo
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- View das Tarefas -->
-            <div id="tasks-view" class="hidden">
-                 <header class="flex justify-between items-center mb-6">
+            <div id="tasks-view" class="hidden view-content">
+                <header class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold text-primary">Lista de Tarefas</h1>
                     <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
                 </header>
                 <div class="bg-secondary p-4 rounded-xl flex items-center gap-2 mb-4 shadow-custom">
-                    <input type="text" id="task-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none" placeholder="Adicionar nova tarefa...">
-                    <button id="split-task-btn" class="p-2 rounded-full hover:bg-tertiary transition-colors" title="Dividir tarefa com IA">
+                    <input type="text" id="task-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] rounded-md p-2" placeholder="Adicionar nova tarefa...">
+                    <button id="split-task-btn" class="p-2 rounded-full hover:bg-tertiary transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Dividir tarefa com IA">
                         <i class="fas fa-wand-magic-sparkles accent-text"></i>
                     </button>
                     <button id="add-task-button" class="accent-bg text-white font-bold w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110">
@@ -190,20 +219,30 @@
             </div>
 
             <!-- View da Lista de Compras -->
-            <div id="shopping-view" class="hidden">
+            <div id="shopping-view" class="hidden view-content">
                 <header class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold text-primary">Lista de Compras</h1>
-                     <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
+                    <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
                 </header>
-                <div class="flex justify-between items-center bg-tertiary p-4 rounded-xl mb-4 shadow-custom">
-                    <span class="text-lg font-semibold text-primary">Total Gasto:</span>
+                <div class="flex flex-col sm:flex-row justify-between items-center bg-tertiary p-4 rounded-xl mb-4 shadow-custom">
+                    <span class="text-lg font-semibold text-primary mb-2 sm:mb-0">Total Gasto:</span>
                     <span id="shopping-total" class="text-2xl font-bold accent-text">R$ 0.00</span>
                 </div>
-                <button id="generate-recipe-btn" class="w-full bg-tertiary text-primary font-semibold py-3 px-4 rounded-xl mb-4 flex items-center justify-center gap-2 transition-transform hover:scale-105">
-                    <i class="fas fa-wand-magic-sparkles accent-text"></i> Criar Receita com IA
-                </button>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-4">
+                    <button id="generate-recipe-btn" class="w-full bg-tertiary text-primary font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-wand-magic-sparkles accent-text"></i> Criar Receita com IA
+                    </button>
+                    <button id="categorize-shopping-btn" class="w-full bg-tertiary text-primary font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-wand-magic-sparkles accent-text"></i> Organizar com IA
+                    </button>
+                </div>
+                <div id="shopping-ai-actions" class="flex flex-col sm:flex-row justify-center gap-4 mb-4">
+                    <button id="estimate-shopping-cost-btn" class="w-full bg-tertiary text-primary font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-wand-magic-sparkles accent-text"></i> Estimar Custo com IA
+                    </button>
+                </div>
                 <div class="bg-secondary p-4 rounded-xl flex items-center gap-2 mb-4 shadow-custom">
-                    <input type="text" id="item-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none" placeholder="Adicionar item...">
+                    <input type="text" id="item-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] rounded-md p-2" placeholder="Adicionar item...">
                     <button id="add-item-button" class="accent-bg text-white font-bold w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110">
                         <i class="fas fa-plus"></i>
                     </button>
@@ -212,13 +251,13 @@
             </div>
 
             <!-- View das Notas -->
-            <div id="notes-view" class="hidden">
+            <div id="notes-view" class="hidden view-content">
                 <header class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold text-primary">Notas Rápidas</h1>
-                     <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
+                    <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
                 </header>
                 <div class="bg-secondary p-4 rounded-xl flex items-center gap-2 mb-4 shadow-custom">
-                    <input type="text" id="note-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none" placeholder="Escreva uma nota...">
+                    <input type="text" id="note-input" class="w-full bg-transparent text-primary placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] rounded-md p-2" placeholder="Escreva uma nota...">
                     <button id="add-note-button" class="accent-bg text-white font-bold w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110">
                         <i class="fas fa-plus"></i>
                     </button>
@@ -227,20 +266,20 @@
             </div>
 
             <!-- View de Configurações -->
-            <div id="settings-view" class="hidden">
+            <div id="settings-view" class="hidden view-content">
                 <header class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold text-primary">Configurações</h1>
-                     <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
+                    <button onclick="showView('home-view')" class="text-secondary hover:accent-text"><i class="fas fa-times text-2xl"></i></button>
                 </header>
                 <div class="bg-secondary p-6 rounded-2xl shadow-custom space-y-6">
                     <!-- Seletor de Tema -->
                     <div>
                         <h3 class="text-lg font-semibold text-primary mb-2">Tema</h3>
                         <div class="flex items-center gap-4">
-                            <button id="theme-light-btn" class="w-full text-center py-3 rounded-lg border-2 border-color">
+                            <button id="theme-light-btn" class="w-full text-center py-3 rounded-lg border-2 border-color transition-colors duration-300">
                                 <i class="fas fa-sun mr-2"></i>Claro
                             </button>
-                            <button id="theme-dark-btn" class="w-full text-center py-3 rounded-lg border-2 border-color">
+                            <button id="theme-dark-btn" class="w-full text-center py-3 rounded-lg border-2 border-color transition-colors duration-300">
                                 <i class="fas fa-moon mr-2"></i>Escuro
                             </button>
                         </div>
@@ -269,6 +308,31 @@
             </div>
         </div>
 
+        <!-- Modal para Expandir e Resumir Nota -->
+        <div id="note-ai-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
+            <div class="modal bg-secondary rounded-2xl shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="note-ai-modal-title" class="text-2xl font-bold accent-text">Nota com IA</h2>
+                    <button id="close-note-ai-modal" class="text-secondary hover:text-red-500"><i class="fas fa-times text-2xl"></i></button>
+                </div>
+                <div id="note-ai-content" class="text-primary prose max-w-none">
+                    <!-- Conteúdo da nota expandida ou resumida aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Organizar Compras -->
+        <div id="shopping-categorize-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
+            <div class="modal bg-secondary rounded-2xl shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold accent-text">Lista de Compras Organizada!</h2>
+                    <button id="close-shopping-categorize-modal" class="text-secondary hover:text-red-500"><i class="fas fa-times text-2xl"></i></button>
+                </div>
+                <div id="categorized-shopping-content" class="text-primary prose max-w-none">
+                    <!-- Conteúdo da lista de compras organizada aqui -->
+                </div>
+            </div>
+        </div>
 
         <!-- Barra de Navegação Inferior -->
         <nav class="fixed bottom-0 left-0 right-0 bg-secondary shadow-custom max-w-md mx-auto mb-4 rounded-full flex justify-around items-center p-2 z-30">
@@ -300,10 +364,14 @@
 
             // ------------------ Seletores de Elementos ------------------
             const selectors = {
-                views: document.querySelectorAll('[id$="-view"]'),
+                views: document.querySelectorAll('.view-content'),
                 navButtons: document.querySelectorAll('.nav-item'),
                 greeting: document.getElementById('greeting'),
                 
+                // Pensamento do Dia
+                dailyThoughtText: document.getElementById('daily-thought-text'),
+                generateThoughtBtn: document.getElementById('generate-thought-btn'),
+
                 // Tarefas
                 taskInput: document.getElementById('task-input'),
                 addTaskBtn: document.getElementById('add-task-button'),
@@ -315,6 +383,8 @@
                 addItemBtn: document.getElementById('add-item-button'),
                 shoppingList: document.getElementById('shopping-list'),
                 generateRecipeBtn: document.getElementById('generate-recipe-btn'),
+                categorizeShoppingBtn: document.getElementById('categorize-shopping-btn'),
+                estimateShoppingCostBtn: document.getElementById('estimate-shopping-cost-btn'),
                 shoppingTotal: document.getElementById('shopping-total'),
 
                 // Notas
@@ -330,10 +400,17 @@
                 // Notificação
                 notification: document.getElementById('notification'),
                 
-                // Modal
+                // Modals
                 recipeModal: document.getElementById('recipe-modal'),
                 closeRecipeModal: document.getElementById('close-recipe-modal'),
                 recipeContent: document.getElementById('recipe-content'),
+                noteAiModal: document.getElementById('note-ai-modal'),
+                closeNoteAiModal: document.getElementById('close-note-ai-modal'),
+                noteAiModalTitle: document.getElementById('note-ai-modal-title'),
+                noteAiContent: document.getElementById('note-ai-content'),
+                shoppingCategorizeModal: document.getElementById('shopping-categorize-modal'),
+                closeShoppingCategorizeModal: document.getElementById('close-shopping-categorize-modal'),
+                categorizedShoppingContent: document.getElementById('categorized-shopping-content'),
             };
 
             // ------------------ Estado da Aplicação ------------------
@@ -343,44 +420,61 @@
                 notes: JSON.parse(localStorage.getItem("notes")) || [],
                 theme: localStorage.getItem("theme") || "dark",
                 accentColor: localStorage.getItem("accentColor") || "#3b82f6",
-                activeView: 'home-view'
+                activeView: localStorage.getItem("activeView") || 'home-view'
             };
 
-            // ------------------ Gemini API Integration ------------------
-            const apiKey = "AIzaSyDh_GfqU5Dbuc6Hu6n9Tj1AMBxNPZG__rQ"; // Substitua este texto pela sua chave de API real.
-            const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            
-            async function callGemini(prompt, buttonToDisable = null) {
-                if(buttonToDisable) buttonToDisable.disabled = true;
-                
-                try {
-                    const response = await fetch(geminiApiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    
-                    const data = await response.json();
-                    return data.candidates[0].content.parts[0].text;
-                } catch (error) {
-                    console.error("Erro na API Gemini:", error);
-                    showNotification("Erro ao conectar com a IA. Verifique sua chave de API e conexão.");
-                    return null;
-                } finally {
-                    if(buttonToDisable) buttonToDisable.disabled = false;
-                }
-            }
-
-            // ------------------ Funções Utilitárias ------------------
             const saveData = () => {
                 localStorage.setItem("tasks", JSON.stringify(state.tasks));
                 localStorage.setItem("shoppingItems", JSON.stringify(state.shoppingItems));
                 localStorage.setItem("notes", JSON.stringify(state.notes));
                 localStorage.setItem("theme", state.theme);
                 localStorage.setItem("accentColor", state.accentColor);
+                localStorage.setItem("activeView", state.activeView);
             };
 
+            // ------------------ Gemini API Integration ------------------
+            const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent`;
+            
+            async function callGemini(prompt, buttonToDisable = null, loadingText = "", retries = 3, delay = 1000) {
+                const originalContent = buttonToDisable ? buttonToDisable.innerHTML : null;
+                if (buttonToDisable) {
+                    buttonToDisable.disabled = true;
+                    buttonToDisable.innerHTML = `<div class="loading-spinner"></div>`;
+                }
+                showNotification(loadingText);
+
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const response = await fetch(geminiApiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            return data.candidates[0].content.parts[0].text;
+                        } else if (response.status === 401 && i < retries - 1) {
+                            // Retry on 401 error, which is common in this environment
+                            await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error("Erro na API Gemini:", error);
+                        if (i < retries - 1) {
+                            await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                        } else {
+                            showNotification("Erro ao conectar com a IA. Tente novamente.");
+                            return null;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            // ------------------ Funções Utilitárias ------------------
             const showNotification = (msg) => {
                 selectors.notification.textContent = msg;
                 selectors.notification.style.opacity = 1;
@@ -398,11 +492,13 @@
                 document.getElementById(viewId)?.classList.remove('hidden');
                 state.activeView = viewId;
                 updateNav();
+                saveData();
             };
 
             const updateNav = () => {
                 selectors.navButtons.forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.view === state.activeView);
+                    btn.setAttribute('aria-pressed', btn.dataset.view === state.activeView);
                 });
             };
             
@@ -411,19 +507,30 @@
             });
             window.showView = showView;
 
+            // ------------------ Módulo de Pensamento do Dia ------------------
+            const generateDailyThought = async () => {
+                const prompt = "Gere um pensamento inspirador ou um fato interessante em uma única frase. Seja conciso e criativo.";
+                const result = await callGemini(prompt, selectors.generateThoughtBtn, "IA a pensar...");
+                if (result) {
+                    selectors.dailyThoughtText.textContent = result;
+                } else {
+                    selectors.dailyThoughtText.textContent = "Não foi possível gerar um pensamento no momento. Tente novamente.";
+                }
+            };
+            selectors.generateThoughtBtn.addEventListener('click', generateDailyThought);
 
             // ------------------ Módulo de Tarefas ------------------
             const renderTasks = () => {
                 selectors.taskList.innerHTML = "";
                 state.tasks.forEach((task, index) => {
                     const li = document.createElement('li');
-                    li.className = `task-item bg-tertiary p-4 rounded-lg flex items-center justify-between transition-all duration-300 ${task.completed ? 'completed' : ''}`;
+                    li.className = `task-item bg-tertiary p-4 rounded-lg flex items-center justify-between transition-all duration-300 ${task.completed ? 'completed' : ''} shadow-sm`;
                     li.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <input type="checkbox" ${task.completed ? 'checked' : ''} data-index="${index}" class="form-checkbox h-5 w-5 rounded accent-bg border-color focus:ring-0">
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} data-index="${index}" class="form-checkbox h-5 w-5 rounded accent-bg border-color focus:ring-0 cursor-pointer">
                             <span class="text-primary">${task.text}</span>
                         </div>
-                        <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                        <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10" aria-label="Remover tarefa"><i class="fas fa-trash"></i></button>
                     `;
                     selectors.taskList.appendChild(li);
                 });
@@ -443,15 +550,15 @@
 
             const splitTaskWithAI = async () => {
                 const text = selectors.taskInput.value.trim();
-                 if (!text) {
+                if (!text) {
                     handleInputError(selectors.taskInput);
                     return;
                 }
-                showNotification("IA a pensar... ✨");
-                const prompt = `Divida a seguinte tarefa em subtarefas pequenas e acionáveis. Responda apenas com as subtarefas, uma por linha, sem numeração ou marcadores. Tarefa: "${text}"`;
-                const result = await callGemini(prompt, selectors.splitTaskBtn);
                 
-                if(result){
+                const prompt = `Divida a seguinte tarefa em subtarefas pequenas e acionáveis. Responda apenas com as subtarefas, uma por linha, sem numeração ou marcadores. Tarefa: "${text}"`;
+                const result = await callGemini(prompt, selectors.splitTaskBtn, "IA a pensar... ✨");
+                
+                if (result) {
                     const subtasks = result.split('\n').filter(t => t.trim() !== "");
                     subtasks.forEach(subtask => {
                         state.tasks.unshift({ text: subtask.trim(), completed: false });
@@ -468,7 +575,9 @@
 
             selectors.taskList.addEventListener('click', (e) => {
                 const target = e.target;
-                const index = target.dataset.index;
+                const li = target.closest('li');
+                if (!li) return;
+                const index = li.querySelector('[data-index]').dataset.index;
                 
                 if (target.type === 'checkbox') {
                     state.tasks[index].completed = !state.tasks[index].completed;
@@ -489,16 +598,16 @@
                         total += parseFloat(item.price || 0);
                     }
                     const li = document.createElement('li');
-                    li.className = 'bg-tertiary p-3 rounded-lg flex items-center justify-between gap-2';
+                    li.className = 'bg-tertiary p-3 rounded-lg flex items-center justify-between gap-2 shadow-sm';
                     li.innerHTML = `
                         <div class="flex items-center gap-3 flex-grow">
-                            <input type="checkbox" ${item.bought ? 'checked' : ''} data-index="${index}" class="form-checkbox h-5 w-5 rounded accent-bg border-color focus:ring-0">
+                            <input type="checkbox" ${item.bought ? 'checked' : ''} data-index="${index}" class="form-checkbox h-5 w-5 rounded accent-bg border-color focus:ring-0 cursor-pointer">
                             <span class="text-primary ${item.bought ? 'line-through opacity-60' : ''}">${item.name}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-secondary text-sm">R$</span>
-                            <input type="number" value="${item.price || 0}" data-index="${index}" class="price-input w-24 bg-primary text-primary rounded-md p-1 text-center border-2 border-color focus:border-[var(--accent-color)] focus:ring-0" placeholder="0.00" step="0.01">
-                            <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors px-2"><i class="fas fa-trash"></i></button>
+                            <input type="number" value="${item.price || 0}" data-index="${index}" class="price-input w-24 bg-primary text-primary rounded-md p-1 text-center border-2 border-color focus:border-[var(--accent-color)] focus:outline-none focus:ring-0" placeholder="0.00" step="0.01">
+                            <button data-index="${index}" class="text-secondary hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10" aria-label="Remover item"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
                     selectors.shoppingList.appendChild(li);
@@ -525,25 +634,65 @@
                     showNotification("Adicione pelo menos 2 ingredientes!");
                     return;
                 }
-                showNotification("IA a criar uma receita... 🍳");
+                
                 const prompt = `Crie uma receita simples e criativa usando apenas e exclusivamente os seguintes ingredientes: ${ingredients.join(', ')}. Assuma que itens básicos como água, sal, pimenta e óleo estão disponíveis. Não adicione nenhum outro ingrediente à receita. Formate a resposta em HTML, usando títulos <h3> para "Ingredientes" e "Modo de Preparo", e listas <ul> e <li> para os itens.`;
-                const result = await callGemini(prompt, selectors.generateRecipeBtn);
+                const result = await callGemini(prompt, selectors.generateRecipeBtn, "IA a criar uma receita... 🍳");
 
-                if(result){
+                if (result) {
                     selectors.recipeContent.innerHTML = result;
                     selectors.recipeModal.classList.remove('hidden');
+                }
+            };
+            
+            const categorizeShoppingList = async () => {
+                const items = state.shoppingItems.map(item => item.name);
+                if (items.length < 3) {
+                    showNotification("Adicione pelo menos 3 itens para categorizar!");
+                    return;
+                }
+                
+                const prompt = `Categorize a seguinte lista de compras. Responda usando markdown, com um cabeçalho para cada categoria e uma lista de itens abaixo. Não inclua itens que não estejam na lista original. Lista de compras: "${items.join(', ')}".`;
+                const result = await callGemini(prompt, selectors.categorizeShoppingBtn, "IA a organizar a lista...");
+
+                if (result) {
+                    selectors.categorizedShoppingContent.innerHTML = result;
+                    selectors.shoppingCategorizeModal.classList.remove('hidden');
+                } else {
+                    showNotification("Não foi possível organizar a lista. Tente novamente.");
+                }
+            };
+            
+            const estimateShoppingCostWithAI = async () => {
+                const items = state.shoppingItems.map(item => item.name);
+                if (items.length === 0) {
+                    showNotification("A lista de compras está vazia!");
+                    return;
+                }
+                
+                const prompt = `Estime o custo total em Reais (R$) para a seguinte lista de compras, assumindo preços médios no Brasil. Responda apenas com o valor numérico, formatado para duas casas decimais, sem o símbolo da moeda ou qualquer outro texto. Lista de compras: "${items.join(', ')}".`;
+                const result = await callGemini(prompt, selectors.estimateShoppingCostBtn, "IA a estimar o custo... ✨");
+
+                if (result && !isNaN(parseFloat(result))) {
+                    const estimatedCost = parseFloat(result).toFixed(2);
+                    showNotification(`Custo estimado: R$ ${estimatedCost}`);
+                    selectors.shoppingTotal.textContent = `R$ ${estimatedCost}`;
+                } else {
+                    showNotification("Não foi possível estimar o custo. Tente novamente.");
                 }
             };
 
             selectors.addItemBtn.addEventListener('click', addItem);
             selectors.itemInput.addEventListener('keypress', e => { if (e.key === 'Enter') addItem(); });
             selectors.generateRecipeBtn.addEventListener('click', generateRecipeWithAI);
+            selectors.categorizeShoppingBtn.addEventListener('click', categorizeShoppingList);
+            selectors.estimateShoppingCostBtn.addEventListener('click', estimateShoppingCostWithAI);
             
             selectors.shoppingList.addEventListener('click', (e) => {
                 const target = e.target;
-                const index = target.closest('li')?.querySelector('[data-index]').dataset.index;
-                if(index === undefined) return;
-
+                const li = target.closest('li');
+                if (!li) return;
+                const index = li.querySelector('[data-index]').dataset.index;
+                
                 if (target.type === 'checkbox') {
                     state.shoppingItems[index].bought = !state.shoppingItems[index].bought;
                     renderShopping();
@@ -554,7 +703,7 @@
                 }
             });
 
-            selectors.shoppingList.addEventListener('change', (e) => {
+            selectors.shoppingList.addEventListener('input', (e) => {
                 const target = e.target;
                 if(target.classList.contains('price-input')) {
                     const index = target.dataset.index;
@@ -567,17 +716,25 @@
             });
 
             selectors.closeRecipeModal.addEventListener('click', () => selectors.recipeModal.classList.add('hidden'));
-
+            selectors.closeShoppingCategorizeModal.addEventListener('click', () => selectors.shoppingCategorizeModal.classList.add('hidden'));
 
             // ------------------ Módulo de Notas ------------------
             const renderNotes = () => {
                 selectors.notesList.innerHTML = "";
                 state.notes.forEach((note, index) => {
                     const li = document.createElement('li');
-                    li.className = 'bg-tertiary p-4 rounded-lg flex flex-col justify-between h-40';
+                    li.className = 'bg-tertiary p-4 rounded-lg flex flex-col justify-between h-40 shadow-sm';
                     li.innerHTML = `
-                        <span class="text-primary flex-grow">${note}</span>
-                        <button data-index="${index}" class="text-secondary hover:text-red-500 self-end"><i class="fas fa-trash"></i></button>
+                        <div class="text-primary flex-grow overflow-auto text-sm">${note.content}</div>
+                        <div class="flex justify-end gap-2 mt-2">
+                            <button class="expand-note-btn text-secondary hover:text-[var(--accent-color)] p-2 rounded-full transition-colors hover:bg-[var(--accent-color)]/10 cursor-pointer" data-index="${index}" aria-label="Expandir nota com IA">
+                                <i class="fas fa-expand text-xs"></i>
+                            </button>
+                            <button class="summarize-note-btn text-secondary hover:text-green-500 p-2 rounded-full transition-colors hover:bg-green-500/10 cursor-pointer" data-index="${index}" aria-label="Resumir nota com IA">
+                                <i class="fas fa-file-lines text-xs"></i>
+                            </button>
+                            <button data-index="${index}" class="text-secondary hover:text-red-500 p-2 rounded-full transition-colors hover:bg-red-500/10" aria-label="Remover nota"><i class="fas fa-trash"></i></button>
+                        </div>
                     `;
                     selectors.notesList.appendChild(li);
                 });
@@ -590,24 +747,64 @@
                     handleInputError(selectors.noteInput);
                     return;
                 }
-                state.notes.unshift(text);
+                state.notes.unshift({ content: text });
                 selectors.noteInput.value = "";
                 renderNotes();
                 showNotification("Nota adicionada!");
+            };
+            
+            const expandNoteWithAI = async (index, button) => {
+                const noteText = state.notes[index].content.trim();
+                if (noteText.length === 0) {
+                     showNotification("A nota está vazia. Escreva algo antes de expandir!");
+                    return;
+                }
+                const prompt = `Expanda o seguinte rascunho de nota, adicionando mais detalhes e tornando-o um parágrafo bem escrito. Rascunho: "${noteText}"`;
+                const result = await callGemini(prompt, button, "IA a expandir a nota... ✨");
+
+                if (result) {
+                    selectors.noteAiModalTitle.textContent = "Nota Expandida com IA";
+                    selectors.noteAiContent.textContent = result;
+                    selectors.noteAiModal.classList.remove('hidden');
+                }
+            };
+            
+            const summarizeNoteWithAI = async (index, button) => {
+                const noteText = state.notes[index].content.trim();
+                if (noteText.length === 0) {
+                    showNotification("A nota está vazia. Escreva algo antes de resumir!");
+                    return;
+                }
+                const prompt = `Resuma o seguinte texto em três pontos-chave. Texto: "${noteText}"`;
+                const result = await callGemini(prompt, button, "IA a resumir a nota... ✨");
+
+                if (result) {
+                    selectors.noteAiModalTitle.textContent = "Nota Resumida com IA";
+                    selectors.noteAiContent.innerHTML = result.replace(/\n/g, '<br>');
+                    selectors.noteAiModal.classList.remove('hidden');
+                }
             };
 
             selectors.addNoteBtn.addEventListener('click', addNote);
             selectors.noteInput.addEventListener('keypress', e => { if (e.key === 'Enter') addNote(); });
             
             selectors.notesList.addEventListener('click', (e) => {
-                if(e.target.closest('button')) {
-                    const index = e.target.closest('button').dataset.index;
+                const target = e.target.closest('button');
+                if(!target) return;
+                const index = target.dataset.index;
+
+                if(target.classList.contains('expand-note-btn')) {
+                    expandNoteWithAI(index, target);
+                } else if(target.classList.contains('summarize-note-btn')) {
+                    summarizeNoteWithAI(index, target);
+                } else if(target.classList.contains('fa-trash') || target.closest('button.fa-trash')) {
                     state.notes.splice(index, 1);
                     renderNotes();
                     showNotification("Nota removida!");
                 }
             });
 
+            selectors.closeNoteAiModal.addEventListener('click', () => selectors.noteAiModal.classList.add('hidden'));
 
             // ------------------ Módulo de Configurações e TEMA ------------------
             const updateGradient = () => {
@@ -628,18 +825,20 @@
                 html.classList.remove('light', 'dark');
                 html.classList.add(state.theme);
                 updateThemeButtons();
-                updateGradient(); // Atualiza o degradê quando o tema muda
+                updateGradient();
             };
 
             const updateThemeButtons = () => {
-                selectors.themeLightBtn.classList.toggle('accent-bg', state.theme === 'light');
-                selectors.themeDarkBtn.classList.toggle('accent-bg', state.theme === 'dark');
+                selectors.themeLightBtn.classList.toggle('bg-[var(--accent-color)]', state.theme === 'light');
+                selectors.themeLightBtn.classList.toggle('text-white', state.theme === 'light');
+                selectors.themeDarkBtn.classList.toggle('bg-[var(--accent-color)]', state.theme === 'dark');
+                selectors.themeDarkBtn.classList.toggle('text-white', state.theme === 'dark');
             };
 
             const applyAccentColor = () => {
                 document.documentElement.style.setProperty('--accent-color', state.accentColor);
                 updateColorPalette();
-                updateGradient(); // Atualiza o degradê quando a cor de destaque muda
+                updateGradient();
             };
             
             const renderColorPalette = () => {
@@ -647,7 +846,7 @@
                 selectors.colorPalette.innerHTML = '';
                 colors.forEach(color => {
                     const colorBtn = document.createElement('button');
-                    colorBtn.className = 'w-10 h-10 rounded-full border-2 border-color transition-transform hover:scale-110';
+                    colorBtn.className = 'w-10 h-10 rounded-full border-2 border-color transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:ring-offset-4';
                     colorBtn.style.backgroundColor = color;
                     colorBtn.dataset.color = color;
                     selectors.colorPalette.appendChild(colorBtn);
@@ -666,8 +865,9 @@
             selectors.themeLightBtn.addEventListener('click', () => { state.theme = 'light'; applyTheme(); saveData(); });
             selectors.themeDarkBtn.addEventListener('click', () => { state.theme = 'dark'; applyTheme(); saveData(); });
             selectors.colorPalette.addEventListener('click', (e) => {
-                if (e.target.dataset.color) {
-                    state.accentColor = e.target.dataset.color;
+                const button = e.target.closest('button');
+                if (button && button.dataset.color) {
+                    state.accentColor = button.dataset.color;
                     applyAccentColor();
                     saveData();
                 }
@@ -683,8 +883,8 @@
 
             const init = () => {
                 applyTheme();
-                renderColorPalette();
                 applyAccentColor();
+                renderColorPalette();
                 
                 renderTasks();
                 renderShopping();
@@ -692,6 +892,7 @@
                 
                 setGreeting();
                 showView(state.activeView);
+                generateDailyThought();
             };
 
             init();
@@ -699,4 +900,3 @@
     </script>
 </body>
 </html>
-
