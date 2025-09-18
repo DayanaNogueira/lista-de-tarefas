@@ -162,7 +162,7 @@
                     <p class="text-secondary mt-2">Pronto para organizar o seu dia?</p>
                 </header>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                     <!-- Atalho Tarefas -->
                     <div class="bg-secondary p-6 rounded-2xl shadow-custom cursor-pointer transition-transform hover:-translate-y-2" onclick="showView('tasks-view')" tabindex="0">
                         <i class="fas fa-list-check text-3xl accent-text mb-3"></i>
@@ -189,7 +189,7 @@
                     </div>
                     
                     <!-- Novo Atalho: Pensamento do Dia -->
-                    <div class="md:col-span-2 lg:col-span-3 bg-secondary p-6 rounded-2xl shadow-custom flex flex-col items-center justify-center text-center">
+                    <div class="md:col-span-2 bg-secondary p-6 rounded-2xl shadow-custom flex flex-col items-center justify-center text-center">
                         <i class="fas fa-brain text-3xl accent-text mb-3"></i>
                         <h2 class="text-xl font-bold text-primary mb-2">Pensamento do Dia</h2>
                         <p id="daily-thought-text" class="text-secondary italic mb-4">Gerando seu pensamento...</p>
@@ -433,9 +433,10 @@
             };
 
             // ------------------ Gemini API Integration ------------------
+            // A API key é fornecida pelo ambiente de execução, não precisa ser incluída no código.
             const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent`;
             
-            async function callGemini(prompt, buttonToDisable = null, loadingText = "", retries = 3, delay = 1000) {
+            async function callGemini(prompt, buttonToDisable = null, loadingText = "") {
                 const originalContent = buttonToDisable ? buttonToDisable.innerHTML : null;
                 if (buttonToDisable) {
                     buttonToDisable.disabled = true;
@@ -443,35 +444,29 @@
                 }
                 showNotification(loadingText);
 
-                for (let i = 0; i < retries; i++) {
-                    try {
-                        const response = await fetch(geminiApiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            return data.candidates[0].content.parts[0].text;
-                        } else if (response.status === 401 && i < retries - 1) {
-                            // Retry on 401 error, which is common in this environment
-                            await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-                        } else {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                    } catch (error) {
-                        console.error("Erro na API Gemini:", error);
-                        if (i < retries - 1) {
-                            await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-                        } else {
-                            showNotification("Erro ao conectar com a IA. Tente novamente.");
-                            return null;
-                        }
+                try {
+                    const response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    console.error("Erro na API Gemini:", error);
+                    showNotification("Erro ao conectar com a IA. Por favor, tente novamente.");
+                    return null;
+                } finally {
+                    if (buttonToDisable) {
+                        buttonToDisable.disabled = false;
+                        buttonToDisable.innerHTML = originalContent;
                     }
                 }
-
-                return null;
             }
 
             // ------------------ Funções Utilitárias ------------------
